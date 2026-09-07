@@ -1,0 +1,72 @@
+/* Minimal styling — this frontend exists to display simulation output, not
+   to be a polished product in its own right. */
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: #222;
+}
+
+h1 { font-size: 1.5rem; }
+.subtitle { color: #555; }
+
+section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+}
+
+input[type="text"] {
+    width: 320px;
+    padding: 0.4rem;
+    font-size: 1rem;
+}
+
+button {
+    padding: 0.4rem 0.8rem;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+    cursor: pointer;
+}
+
+.y-button {
+    margin: 0.25rem 0.5rem 0.25rem 0;
+}
+
+.y-button.selected {
+    background: #4C72B0;
+    color: white;
+}
+
+.message {
+    min-height: 1.2em;
+}
+
+.message.error {
+    color: #C44E52;
+}
+
+.message.success {
+    color: #2a7a2a;
+}
+
+table#metrics-table {
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+table#metrics-table td {
+    padding: 0.3rem 1rem 0.3rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+table#metrics-table td:first-child {
+    color: #555;
+}
+
+img#histogram {
+    max-width: 100%;
+    border: 1px solid #ddd;
+}

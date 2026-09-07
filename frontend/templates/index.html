@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pokemon Pack-Opening Monte Carlo Simulation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>Pokemon TCG Pack-Opening Monte Carlo Simulation</h1>
+        <p class="subtitle">
+            Simulates opening booster packs of a Scarlet &amp; Violet or Mega Evolution set and reports the
+            resulting profit distribution in VaR / CVaR / breakeven-probability terms.
+        </p>
+
+        <!-- Step 1: set name entry -->
+        <section id="step-set">
+            <h2>Step 1: Choose a set</h2>
+            <form id="set-form">
+                <input type="text" id="set-input" placeholder="e.g. SV01: Scarlet &amp; Violet Base Set" autocomplete="off">
+                <button type="submit">Submit</button>
+            </form>
+            <p id="set-message" class="message"></p>
+        </section>
+
+        <!-- Step 2: pack count selection (hidden until a valid set is submitted) -->
+        <section id="step-y" hidden>
+            <h2>Step 2: Choose how many packs to open</h2>
+            <p>Set: <strong id="chosen-set"></strong></p>
+            <div id="y-buttons">
+                {% for y in y_values %}
+                <button type="button" class="y-button" data-y="{{ y }}">{{ y }}</button>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Step 3: results (hidden until a simulation has run) -->
+        <section id="step-results" hidden>
+            <h2>Results</h2>
+            <p id="results-status" class="message"></p>
+            <div id="results-content" hidden>
+                <table id="metrics-table">
+                    <tbody>
+                        <tr><td>Trials simulated</td><td id="m-n-trials"></td></tr>
+                        <tr><td>Pack cost</td><td id="m-pack-cost"></td></tr>
+                        <tr><td>Mean profit</td><td id="m-mean"></td></tr>
+                        <tr><td>Standard deviation</td><td id="m-sd"></td></tr>
+                        <tr><td>Breakeven probability</td><td id="m-breakeven"></td></tr>
+                        <tr><td>VaR (95%)</td><td id="m-var95"></td></tr>
+                        <tr><td>CVaR (95%)</td><td id="m-cvar95"></td></tr>
+                        <tr><td>VaR (99%)</td><td id="m-var99"></td></tr>
+                        <tr><td>CVaR (99%)</td><td id="m-cvar99"></td></tr>
+                    </tbody>
+                </table>
+                <img id="histogram" alt="Simulated profit distribution histogram">
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
