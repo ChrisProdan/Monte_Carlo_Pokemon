@@ -41,6 +41,11 @@ class SetDistribution:
 
     `outcomes[i]` / `payoffs[i]` are the card name and price for outcome i
     (index 0 is always the WORTHLESS_OUTCOME sentinel with payoff 0.0).
+    `probs[i]` is the raw (non-cumulative) probability of outcome i — kept
+    alongside `cumulative_probs` even though sampling only needs the
+    cumulative form, because importance sampling (importance_sampling.py)
+    needs p(x) directly to compute weights p(x)/q(x); storing both avoids
+    re-deriving one from the other's differences every time it's needed.
     `cumulative_probs[i]` is P(outcome index <= i) — a monotonically
     non-decreasing array ending at exactly 1.0, built once per set so that
     every simulated trial can be drawn with a single numpy.searchsorted call
@@ -51,6 +56,7 @@ class SetDistribution:
     groupid: int
     outcomes: list[str]
     payoffs: np.ndarray
+    probs: np.ndarray
     cumulative_probs: np.ndarray
     pack_cost: float
 
@@ -132,7 +138,8 @@ def build_set_distribution(conn: psycopg.Connection, setname: str) -> SetDistrib
     probs[0] = max(worthless_probability, 0.0)
 
     payoffs_arr = np.array(payoffs, dtype=np.float64)
-    cumulative_probs = np.cumsum(np.array(probs, dtype=np.float64))
+    probs_arr = np.array(probs, dtype=np.float64)
+    cumulative_probs = np.cumsum(probs_arr)
     # Force the last entry to exactly 1.0 to eliminate floating-point drift
     # from the many small additions above — without this, a uniform draw of
     # exactly 1.0 (astronomically unlikely but not impossible) could fall
@@ -147,6 +154,7 @@ def build_set_distribution(conn: psycopg.Connection, setname: str) -> SetDistrib
         groupid=groupid,
         outcomes=outcomes,
         payoffs=payoffs_arr,
+        probs=probs_arr,
         cumulative_probs=cumulative_probs,
         pack_cost=pack_cost,
     )

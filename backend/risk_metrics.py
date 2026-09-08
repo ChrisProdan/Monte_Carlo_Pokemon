@@ -32,14 +32,15 @@ class RiskMetrics:
 
     y: int
     n_trials: int
+    total_cost: float
     mean: float
     sd: float
     breakeven_prob: float
     by_alpha: dict[float, AlphaMetrics]
 
 
-def compute_risk_metrics(profits: np.ndarray, y: int, alphas: tuple[float, ...]) -> RiskMetrics:
-    """Computes mean, SD, VaR/CVaR per alpha, and breakeven probability for one batch of trials.
+def compute_risk_metrics(profits: np.ndarray, y: int, pack_cost: float, alphas: tuple[float, ...]) -> RiskMetrics:
+    """Computes mean, SD, VaR/CVaR per alpha, breakeven probability, and total cost for one batch of trials.
 
     `profits` is an array of M simulated total-profit outcomes for opening y
     packs (Π_y in the design doc's notation). Sorting once up front and
@@ -49,6 +50,14 @@ def compute_risk_metrics(profits: np.ndarray, y: int, alphas: tuple[float, ...])
     n_trials = len(profits)
     mean = float(np.mean(profits))
     sd = float(np.std(profits, ddof=0))
+
+    # Total cost = what the user actually paid for y packs, independent of
+    # the simulation outcome. It isn't itself a risk statistic, but it's
+    # included here so it travels alongside VaR/CVaR everywhere RiskMetrics
+    # does — the point of reporting it is to let VaR be read directly
+    # against it (e.g. "VaR_95 is 40% of what you spent"), which is much
+    # easier to judge side by side than by mentally recomputing y * pack_cost.
+    total_cost = y * pack_cost
 
     # Breakeven probability = P(Π_y > 0): the fraction of simulated
     # scenarios where the packs' resale value exceeded what they cost.
@@ -63,6 +72,7 @@ def compute_risk_metrics(profits: np.ndarray, y: int, alphas: tuple[float, ...])
     return RiskMetrics(
         y=y,
         n_trials=n_trials,
+        total_cost=total_cost,
         mean=mean,
         sd=sd,
         breakeven_prob=breakeven_prob,

@@ -36,6 +36,35 @@ def toy_distribution() -> SetDistribution:
         groupid=1,
         outcomes=outcomes,
         payoffs=payoffs,
+        probs=probs,
         cumulative_probs=cumulative_probs,
         pack_cost=5.0,
+    )
+
+
+@pytest.fixture
+def rare_win_distribution() -> SetDistribution:
+    """A distribution with a genuinely rare, high-value outcome — built
+    specifically to exercise importance sampling, where the toy_distribution
+    fixture above (rarest outcome at 5%) isn't rare enough to be interesting.
+
+    99.9% worthless ($0), 0.1% a "Big Win" card worth $1000. Pack cost $1.
+    Expected value per pack = 0.999*0 + 0.001*1000 - 1 = 0.0 exactly — a
+    deliberately chosen round number so hand-verification of any estimator
+    built on top of this fixture is trivial.
+    """
+    outcomes = [WORTHLESS_OUTCOME, "Big Win"]
+    payoffs = np.array([0.0, 1000.0])
+    probs = np.array([0.999, 0.001])
+    cumulative_probs = np.cumsum(probs)
+    cumulative_probs[-1] = 1.0
+
+    return SetDistribution(
+        setname="Rare Win Set",
+        groupid=2,
+        outcomes=outcomes,
+        payoffs=payoffs,
+        probs=probs,
+        cumulative_probs=cumulative_probs,
+        pack_cost=1.0,
     )

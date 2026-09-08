@@ -1,12 +1,16 @@
-// Drives the 3-step flow: submit a set name -> pick a y -> show results.
-// No framework, just fetch() calls against the two backend JSON endpoints
-// and direct DOM updates — matches the "deliberately simple" frontend scope.
+// Drives the 3-step flow: submit a set name -> enter a pack count -> show
+// results. No framework, just fetch() calls against the two backend JSON
+// endpoints and direct DOM updates — matches the "deliberately simple"
+// frontend scope.
 
 const setForm = document.getElementById("set-form");
 const setInput = document.getElementById("set-input");
 const setMessage = document.getElementById("set-message");
 const stepY = document.getElementById("step-y");
 const chosenSetLabel = document.getElementById("chosen-set");
+const yForm = document.getElementById("y-form");
+const yInput = document.getElementById("y-input");
+const yMessage = document.getElementById("y-message");
 const stepResults = document.getElementById("step-results");
 const resultsStatus = document.getElementById("results-status");
 const resultsContent = document.getElementById("results-content");
@@ -36,6 +40,7 @@ setForm.addEventListener("submit", async (event) => {
         // A different set invalidates any previously-shown results.
         stepResults.hidden = true;
         resultsContent.hidden = true;
+        yMessage.textContent = "";
     } else {
         confirmedSetName = null;
         setMessage.textContent = data.message;
@@ -44,14 +49,22 @@ setForm.addEventListener("submit", async (event) => {
     }
 });
 
-document.getElementById("y-buttons").addEventListener("click", async (event) => {
-    if (!event.target.classList.contains("y-button")) return;
+yForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
     if (!confirmedSetName) return;
 
-    document.querySelectorAll(".y-button").forEach((btn) => btn.classList.remove("selected"));
-    event.target.classList.add("selected");
+    const min = parseInt(yInput.min, 10);
+    const max = parseInt(yInput.max, 10);
+    const y = parseInt(yInput.value, 10);
 
-    const y = parseInt(event.target.dataset.y, 10);
+    // Client-side check for immediate feedback; the server enforces the
+    // same range authoritatively regardless, since this can be bypassed.
+    if (!Number.isInteger(y) || y < min || y > max) {
+        yMessage.textContent = `Enter a whole number between ${min} and ${max}.`;
+        yMessage.className = "message error";
+        return;
+    }
+    yMessage.textContent = "";
 
     stepResults.hidden = false;
     resultsContent.hidden = true;
@@ -76,10 +89,18 @@ document.getElementById("y-buttons").addEventListener("click", async (event) => 
     resultsContent.hidden = false;
 
     const money = (value) => `$${value.toFixed(2)}`;
-    const varLabel = (value, binding) => (binding ? money(value) : `${money(value)} (non-binding)`);
+    // VaR is a loss magnitude; showing it as a percentage of total_cost
+    // (what was actually spent on the y packs) makes it directly readable
+    // at a glance ("this is 49% of what I paid") instead of requiring the
+    // reader to mentally divide the two numbers themselves.
+    const varLabel = (value, binding) => {
+        const pctOfCost = data.total_cost > 0 ? ` (${((value / data.total_cost) * 100).toFixed(0)}% of total cost)` : "";
+        return binding ? `${money(value)}${pctOfCost}` : `${money(value)} (non-binding)`;
+    };
 
     document.getElementById("m-n-trials").textContent = data.n_trials.toLocaleString();
     document.getElementById("m-pack-cost").textContent = money(data.pack_cost);
+    document.getElementById("m-total-cost").textContent = money(data.total_cost);
     document.getElementById("m-mean").textContent = money(data.mean);
     document.getElementById("m-sd").textContent = money(data.sd);
     document.getElementById("m-breakeven").textContent = `${(data.breakeven_prob * 100).toFixed(2)}%`;
@@ -87,6 +108,18 @@ document.getElementById("y-buttons").addEventListener("click", async (event) => 
     document.getElementById("m-cvar95").textContent = money(data.cvar_95);
     document.getElementById("m-var99").textContent = varLabel(data.var_99, data.var_99_binding);
     document.getElementById("m-cvar99").textContent = money(data.cvar_99);
+
+    // Top-tier: the odds (and payoff) of landing in the rare upper tail,
+    // estimated via importance sampling rather than the plain Monte Carlo
+    // batch the other rows come from — see ARCHITECTURE.md section 1.8 for
+    // why this needs a different technique than VaR/CVaR do.
+    const tailPct = data.top_tier_tail_pct.toFixed(2);
+    document.getElementById("m-top-tier-label").textContent = `Odds of a top-${tailPct}% pull`;
+    document.getElementById("m-top-tier-prob").textContent = `${(data.top_tier_probability * 100).toFixed(3)}%`;
+    document.getElementById("m-top-tier-ev").textContent = money(data.top_tier_expected_profit);
+    const essPct = ((data.top_tier_ess / data.top_tier_n_trials) * 100).toFixed(1);
+    document.getElementById("m-top-tier-ess").textContent =
+        `effective sample size: ${Math.round(data.top_tier_ess).toLocaleString()} / ${data.top_tier_n_trials.toLocaleString()} trials (${essPct}%)`;
 
     histogramImg.src = `data:image/png;base64,${data.histogram_base64}`;
 });

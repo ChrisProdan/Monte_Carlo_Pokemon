@@ -27,7 +27,7 @@ def test_var_and_cvar_on_hand_computable_array():
     assert profits[0] == -100
     assert profits[-1] == 90
 
-    metrics = compute_risk_metrics(profits, y=1, alphas=(0.95, 0.90))
+    metrics = compute_risk_metrics(profits, y=1, pack_cost=5.0, alphas=(0.95, 0.90))
 
     m95 = metrics.by_alpha[0.95]
     assert m95.var == pytest.approx(100.0)
@@ -40,6 +40,10 @@ def test_var_and_cvar_on_hand_computable_array():
 
     assert metrics.mean == pytest.approx(np.mean(profits))
     assert metrics.breakeven_prob == pytest.approx(np.mean(profits > 0))
+    # total_cost = y * pack_cost, independent of the simulated outcomes —
+    # included alongside the risk metrics specifically so VaR/CVaR can be
+    # read directly against what was actually spent.
+    assert metrics.total_cost == pytest.approx(5.0)
 
 
 def test_var_is_non_binding_when_tail_boundary_is_positive():
@@ -48,7 +52,7 @@ def test_var_is_non_binding_when_tail_boundary_is_positive():
     positive number derived from a profit."""
     profits = np.array([5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0])
 
-    metrics = compute_risk_metrics(profits, y=1, alphas=(0.95,))
+    metrics = compute_risk_metrics(profits, y=1, pack_cost=5.0, alphas=(0.95,))
     m95 = metrics.by_alpha[0.95]
 
     assert m95.var_binding is False
@@ -60,7 +64,7 @@ def test_var_is_non_binding_when_tail_boundary_is_positive():
 
 def test_breakeven_probability_is_fraction_of_positive_trials():
     profits = np.array([-1.0, -1.0, 1.0, 1.0, 1.0, 1.0])  # 4 of 6 are profitable
-    metrics = compute_risk_metrics(profits, y=1, alphas=(0.95,))
+    metrics = compute_risk_metrics(profits, y=1, pack_cost=5.0, alphas=(0.95,))
     assert metrics.breakeven_prob == pytest.approx(4 / 6)
 
 

@@ -31,13 +31,16 @@ button {
     cursor: pointer;
 }
 
-.y-button {
-    margin: 0.25rem 0.5rem 0.25rem 0;
+input[type="number"] {
+    width: 100px;
+    padding: 0.4rem;
+    font-size: 1rem;
 }
 
-.y-button.selected {
-    background: #4C72B0;
-    color: white;
+.note {
+    font-size: 0.85rem;
+    color: #777;
+    max-width: 500px;
 }
 
 .message {
@@ -64,6 +67,14 @@ table#metrics-table td {
 
 table#metrics-table td:first-child {
     color: #555;
+}
+
+/* Total cost and VaR rows are highlighted together so the two figures
+   meant to be compared side by side (per the project's risk-analytics
+   framing: "is VaR a small or large fraction of what I actually spent?")
+   stand out visually from the rest of the table. */
+table#metrics-table tr.highlight td {
+    font-weight: bold;
 }
 
 img#histogram {

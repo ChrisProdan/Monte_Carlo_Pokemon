@@ -23,15 +23,16 @@
             <p id="set-message" class="message"></p>
         </section>
 
-        <!-- Step 2: pack count selection (hidden until a valid set is submitted) -->
+        <!-- Step 2: pack count entry (hidden until a valid set is submitted) -->
         <section id="step-y" hidden>
-            <h2>Step 2: Choose how many packs to open</h2>
+            <h2>Step 2: How many packs?</h2>
             <p>Set: <strong id="chosen-set"></strong></p>
-            <div id="y-buttons">
-                {% for y in y_values %}
-                <button type="button" class="y-button" data-y="{{ y }}">{{ y }}</button>
-                {% endfor %}
-            </div>
+            <form id="y-form">
+                <input type="number" id="y-input" min="{{ min_y }}" max="{{ max_y }}" step="1"
+                       placeholder="1-{{ max_y }}" autocomplete="off">
+                <button type="submit">Simulate</button>
+            </form>
+            <p id="y-message" class="message"></p>
         </section>
 
         <!-- Step 3: results (hidden until a simulation has run) -->
@@ -43,15 +44,22 @@
                     <tbody>
                         <tr><td>Trials simulated</td><td id="m-n-trials"></td></tr>
                         <tr><td>Pack cost</td><td id="m-pack-cost"></td></tr>
+                        <tr class="highlight"><td>Total cost (what you paid)</td><td id="m-total-cost"></td></tr>
                         <tr><td>Mean profit</td><td id="m-mean"></td></tr>
                         <tr><td>Standard deviation</td><td id="m-sd"></td></tr>
                         <tr><td>Breakeven probability</td><td id="m-breakeven"></td></tr>
-                        <tr><td>VaR (95%)</td><td id="m-var95"></td></tr>
+                        <tr class="highlight"><td>VaR (95%)</td><td id="m-var95"></td></tr>
                         <tr><td>CVaR (95%)</td><td id="m-cvar95"></td></tr>
-                        <tr><td>VaR (99%)</td><td id="m-var99"></td></tr>
+                        <tr class="highlight"><td>VaR (99%)</td><td id="m-var99"></td></tr>
                         <tr><td>CVaR (99%)</td><td id="m-cvar99"></td></tr>
+                        <tr class="highlight"><td id="m-top-tier-label">Odds of a top-tier pull</td><td id="m-top-tier-prob"></td></tr>
+                        <tr><td>Expected profit if you land one</td><td id="m-top-tier-ev"></td></tr>
                     </tbody>
                 </table>
+                <p class="note">
+                    "Top-tier" and its expected profit are estimated via importance sampling
+                    (<span id="m-top-tier-ess"></span>) — see ARCHITECTURE.md for the method.
+                </p>
                 <img id="histogram" alt="Simulated profit distribution histogram">
             </div>
         </section>
